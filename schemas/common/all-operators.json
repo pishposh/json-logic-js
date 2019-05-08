@@ -14,7 +14,7 @@
     { "$ref": "http://jsonlogic.com/schemas/operators/arithmetic/divide.json" },
     { "$ref": "http://jsonlogic.com/schemas/operators/arithmetic/modulo.json" },
     { "$ref": "http://jsonlogic.com/schemas/operators/arithmetic/multiply.json" },
-    { "$ref": "http://jsonlogic.com/schemas/operators/arithmetic/substract.json" },
+    { "$ref": "http://jsonlogic.com/schemas/operators/arithmetic/subtract.json" },
 
     { "$ref": "http://jsonlogic.com/schemas/operators/array/all.json" },
     { "$ref": "http://jsonlogic.com/schemas/operators/array/filter.json" },

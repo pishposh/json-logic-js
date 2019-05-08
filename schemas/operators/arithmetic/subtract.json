@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "$id": "http://jsonlogic.com/schemas/operators/arithmetic/substract.json",
+  "$id": "http://jsonlogic.com/schemas/operators/arithmetic/subtract.json",
 
   "title": "-",
   "description": "Subtraction. Passing just one argument to - returns its arithmetic negative (additive inverse).",

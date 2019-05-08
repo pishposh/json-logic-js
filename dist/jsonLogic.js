@@ -208,7 +208,7 @@
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i];
       var value = apply({
-        var: key
+        "var": key
       }, this);
 
       if (value === null || value === '') {
@@ -272,7 +272,7 @@
 
   multiply.op = '*';
 
-  function substract(a, b) {
+  function subtract(a, b) {
     if (b === undefined) {
       return -a;
     }
@@ -280,7 +280,7 @@
     return a - b;
   }
 
-  substract.op = '-';
+  subtract.op = '-';
 
   /*
     This helper will defer to the JsonLogic spec as a tie-breaker when different language interpreters define different behavior for the truthiness of primitives.  E.g., PHP considers empty arrays to be falsy, but Javascript considers them to be truthy. JsonLogic, as an ecosystem, needs one consistent answer.
@@ -570,7 +570,7 @@
     divide: divide,
     modulo: modulo,
     multiply: multiply,
-    substract: substract,
+    subtract: subtract,
     all: all,
     filter: filter,
     map: map,
