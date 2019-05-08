@@ -1,5 +1,5 @@
 function add(...args) {
-  return args.reduce((a, b) => parseFloat(a, 10) + parseFloat(b, 10), 0);
+  return args.reduce((a, b) => parseFloat(a) + parseFloat(b), 0);
 }
 
 add.op = '+';

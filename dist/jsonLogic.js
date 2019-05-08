@@ -242,7 +242,7 @@
     }
 
     return args.reduce(function (a, b) {
-      return parseFloat(a, 10) + parseFloat(b, 10);
+      return parseFloat(a) + parseFloat(b);
     }, 0);
   }
 
@@ -266,7 +266,7 @@
     }
 
     return args.reduce(function (a, b) {
-      return parseFloat(a, 10) * parseFloat(b, 10);
+      return parseFloat(a) * parseFloat(b);
     }, 1);
   }
 

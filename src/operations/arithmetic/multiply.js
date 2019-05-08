@@ -1,5 +1,5 @@
 function multiply(...args) {
-  return args.reduce((a, b) => parseFloat(a, 10) * parseFloat(b, 10), 1);
+  return args.reduce((a, b) => parseFloat(a) * parseFloat(b), 1);
 }
 
 multiply.op = '*';
