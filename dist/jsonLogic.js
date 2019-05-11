@@ -6,42 +6,8 @@
 
   var isArray = Array.isArray;
 
-  function _typeof(obj) {
-    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-      _typeof = function (obj) {
-        return typeof obj;
-      };
-    } else {
-      _typeof = function (obj) {
-        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-      };
-    }
-
-    return _typeof(obj);
-  }
-
-  function _toConsumableArray(arr) {
-    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
-  }
-
-  function _arrayWithoutHoles(arr) {
-    if (Array.isArray(arr)) {
-      for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-      return arr2;
-    }
-  }
-
-  function _iterableToArray(iter) {
-    if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
-  }
-
-  function _nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance");
-  }
-
   function is_logic(logic) {
-    return _typeof(logic) === 'object' && // An object
+    return typeof logic === 'object' && // An object
     logic !== null && // but not null
     !isArray(logic) && // and not an array
     Object.keys(logic).length === 1 // with exactly one key
@@ -84,8 +50,10 @@
       delete operations[name];
     }
 
-    function apply(logic) {
-      var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    function apply(logic, data) {
+      if (data === void 0) {
+        data = {};
+      }
 
       // Does this array contain logic? Only one way to find out.
       if (isArray(logic)) {
@@ -145,14 +113,14 @@
           operation = operation[sub_ops[i]];
 
           if (operation === undefined) {
-            throw new Error("Unrecognized operation ".concat(op, " (failed at ").concat(sub_ops.slice(0, i + 1).join('.'), ")"));
+            throw new Error("Unrecognized operation " + op + " (failed at " + sub_ops.slice(0, i + 1).join('.') + ")");
           }
         }
 
         return operation.apply(data, values);
       }
 
-      throw new Error("Unrecognized operation ".concat(op));
+      throw new Error("Unrecognized operation " + op);
     }
 
     return {
@@ -638,7 +606,7 @@
       } else {
         // Recursion!
         values.forEach(function (val) {
-          collection.push.apply(collection, _toConsumableArray(uses_data(val)));
+          collection.push.apply(collection, uses_data(val));
         });
       }
     }
