@@ -21,7 +21,7 @@ glob.sync('../schemas/**/*.json', { cwd }).forEach(file => {
   ajv.addSchema(schema);
 });
 
-const validate = ajv.compile(jsonLogicSchema)
+const validate = ajv.compile(jsonLogicSchema);
 
 const download = (url, dest, cb) => {
   const file = fs.createWriteStream(dest);
@@ -100,7 +100,11 @@ remote_or_cache(
       )}) === ${JSON.stringify(expected)}`
     );
 
-    assert.equal(validate(rule), true, JSON.stringify(rule) + '\n\n' + JSON.stringify(validate.errors, null, 2));
+    assert.equal(
+      validate(rule),
+      true,
+      `${JSON.stringify(rule)}\n\n${JSON.stringify(validate.errors, null, 2)}`
+    );
   }
 );
 

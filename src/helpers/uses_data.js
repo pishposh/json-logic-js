@@ -1,13 +1,13 @@
 import isArray from './isArray';
 import is_logic from './is_logic';
-import get_operator from './get_operator';
+import get_operator_name from './get_operator_name';
 import arrayUnique from './arrayUnique';
 
 function uses_data(logic) {
   const collection = [];
 
   if (is_logic(logic)) {
-    const op = get_operator(logic);
+    const op = get_operator_name(logic);
     let values = logic[op];
 
     if (!isArray(values)) {

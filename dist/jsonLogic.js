@@ -14,29 +14,37 @@
     ;
   }
 
-  function get_operator(logic) {
+  function get_operator_name(logic) {
     return Object.keys(logic)[0];
   }
 
-  function createJsonLogic(_operations) {
-    var operations = {};
-
-    if (_operations) {
-      Object.keys(_operations).forEach(function (name) {
-        var operation = _operations[name];
-        add_operation(operation.op || name, operation);
-      });
+  function createJsonLogic(operations) {
+    if (operations === void 0) {
+      operations = {};
     }
 
-    function add_operation(name, op) {
+    function add_operation(name, operator) {
       if (isArray(name)) {
         name.forEach(function (key) {
-          return add_operation(key, op);
+          return add_operation(key, operator);
         });
         return;
       }
 
-      operations[name] = op;
+      if (typeof operator === 'function') {
+        // `operator` is a function(args...)
+        // need to rework as function(apply, data, raw_args)
+        operations[name] = function (apply, data, raw_args) {
+          var args = raw_args.map(function (raw_arg) {
+            return apply(raw_arg, data);
+          });
+          return operator.apply(void 0, args);
+        };
+      } else if (typeof operator === 'object') {
+        Object.getOwnPropertyNames(operator).forEach(function (prop_name) {
+          add_operation(name + "." + prop_name, operator[prop_name]);
+        });
+      }
     }
 
     function rm_operation(name) {
@@ -51,11 +59,8 @@
     }
 
     function apply(logic, data) {
-      if (data === void 0) {
-        data = {};
-      }
+      if (!data) data = {}; // Does this array contain logic? Only one way to find out.
 
-      // Does this array contain logic? Only one way to find out.
       if (isArray(logic)) {
         return logic.map(function (l) {
           return apply(l, data);
@@ -67,60 +72,21 @@
         return logic;
       }
 
-      var op = get_operator(logic);
-      var values = logic[op];
-      var i; // easy syntax for unary operators, like {"var" : "x"} instead of strict {"var" : ["x"]}
+      var op_name = get_operator_name(logic);
+      var args = logic[op_name]; // operands
+      // easy syntax for unary operators, like {"var" : "x"} instead of strict {"var" : ["x"]}
 
-      if (!isArray(values)) {
-        values = [values];
+      if (!isArray(args)) {
+        args = [args];
       }
 
-      var operator = operations[op];
+      var operator = operations[op_name];
 
-      if (typeof operator === 'function') {
-        var _operator$deepFirst = operator.deepFirst,
-            deepFirst = _operator$deepFirst === void 0 ? true : _operator$deepFirst; // apply matching visitors first
-
-        if (!deepFirst) {
-          return operator(apply, data, values);
-        }
-      } // Everyone else gets immediate depth-first recursion
-
-
-      values = values.map(function (val) {
-        return apply(val, data);
-      }); // The operation is called with "data" bound to its "this" and "values" passed as arguments.
-      // Structured commands like % or > can name formal arguments while flexible commands (like missing or merge) can operate on the pseudo-array arguments
-      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
-
-      if (typeof operator === 'function') {
-        var withApply = operator.withApply;
-
-        if (withApply) {
-          values.unshift(apply);
-        }
-
-        return operator.apply(data, values);
+      if (!operator) {
+        throw new Error("Unrecognized operation " + op_name);
       }
 
-      if (op.indexOf('.') > 0) {
-        // Contains a dot, and not in the 0th position
-        var sub_ops = String(op).split('.');
-        var operation = operations;
-
-        for (i = 0; i < sub_ops.length; i++) {
-          // Descending into operations
-          operation = operation[sub_ops[i]];
-
-          if (operation === undefined) {
-            throw new Error("Unrecognized operation " + op + " (failed at " + sub_ops.slice(0, i + 1).join('.') + ")");
-          }
-        }
-
-        return operation.apply(data, values);
-      }
-
-      throw new Error("Unrecognized operation " + op);
+      return operator(apply, data, args);
     }
 
     return {
@@ -129,126 +95,6 @@
       rm_operation: rm_operation
     };
   }
-
-  function variable(a, b) {
-    var not_found = b === undefined ? null : b;
-    var data = this;
-
-    if (typeof a === 'undefined' || a === '' || a === null) {
-      return data;
-    }
-
-    var sub_props = String(a).split('.');
-
-    for (var i = 0; i < sub_props.length; i++) {
-      if (data === null) {
-        return not_found;
-      } // Descending into data
-
-
-      data = data[sub_props[i]];
-
-      if (data === undefined) {
-        return not_found;
-      }
-    }
-
-    return data;
-  }
-
-  variable.op = 'var';
-
-  function missing(apply) {
-    /*
-    Missing can receive many keys as many arguments, like {"missing:[1,2]}
-    Missing can also receive *one* argument that is an array of keys,
-    which typically happens if it's actually acting on the output of another command
-    (like 'if' or 'merge')
-    */
-    var are_missing = [];
-
-    for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      args[_key - 1] = arguments[_key];
-    }
-
-    var keys = isArray(args[0]) ? args[0] : args;
-
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
-      var value = apply({
-        "var": key
-      }, this);
-
-      if (value === null || value === '') {
-        are_missing.push(key);
-      }
-    }
-
-    return are_missing;
-  }
-
-  missing.withApply = true;
-
-  function missing_some(apply, need_count, options) {
-    // missing_some takes two arguments, how many (minimum) items must be present, and an array of keys (just like 'missing') to check for presence.
-    var are_missing = apply({
-      missing: options
-    }, this);
-
-    if (options.length - are_missing.length >= need_count) {
-      return [];
-    }
-
-    return are_missing;
-  }
-
-  missing_some.withApply = true;
-
-  function add() {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return args.reduce(function (a, b) {
-      return parseFloat(a) + parseFloat(b);
-    }, 0);
-  }
-
-  add.op = '+';
-
-  function divide(a, b) {
-    return a / b;
-  }
-
-  divide.op = '/';
-
-  function modulo(a, b) {
-    return a % b;
-  }
-
-  modulo.op = '%';
-
-  function multiply() {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return args.reduce(function (a, b) {
-      return parseFloat(a) * parseFloat(b);
-    }, 1);
-  }
-
-  multiply.op = '*';
-
-  function subtract(a, b) {
-    if (b === undefined) {
-      return -a;
-    }
-
-    return a - b;
-  }
-
-  subtract.op = '-';
 
   /*
     This helper will defer to the JsonLogic spec as a tie-breaker when different language interpreters define different behavior for the truthiness of primitives.  E.g., PHP considers empty arrays to be falsy, but Javascript considers them to be truthy. JsonLogic, as an ecosystem, needs one consistent answer.
@@ -264,312 +110,8 @@
     return !!value;
   }
 
-  function all(apply, data, values) {
-    var scopedData = apply(values[0], data);
-    var scopedLogic = values[1]; // All of an empty set is false. Note, some and none have correct fallback after the for loop
-
-    if (!scopedData.length) {
-      return false;
-    }
-
-    for (var i = 0; i < scopedData.length; i += 1) {
-      if (!truthy(apply(scopedLogic, scopedData[i]))) {
-        return false; // First falsy, short circuit
-      }
-    }
-
-    return true; // All were truthy
-  }
-
-  all.deepFirst = false;
-
-  function filter(apply, data, values) {
-    var scopedData = apply(values[0], data);
-    var scopedLogic = values[1];
-
-    if (!isArray(scopedData)) {
-      return [];
-    } // Return only the elements from the array in the first argument,
-    // that return truthy when passed to the logic in the second argument.
-    // For parity with JavaScript, reindex the returned array
-
-
-    return scopedData.filter(function (datum) {
-      return truthy(apply(scopedLogic, datum));
-    });
-  }
-
-  filter.deepFirst = false;
-
-  function map(apply, data, values) {
-    var scopedData = apply(values[0], data);
-    var scopedLogic = values[1];
-
-    if (!isArray(scopedData)) {
-      return [];
-    }
-
-    return scopedData.map(function (datum) {
-      return apply(scopedLogic, datum);
-    });
-  }
-
-  map.deepFirst = false;
-
-  function merge() {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return args.reduce(function (a, b) {
-      return a.concat(b);
-    }, []);
-  }
-
-  function none(apply, data, values) {
-    var filtered = apply({
-      filter: values
-    }, data);
-    return filtered.length === 0;
-  }
-
-  none.deepFirst = false;
-
-  function reduce(apply, data, values) {
-    var scopedData = apply(values[0], data);
-    var scopedLogic = values[1];
-    var initial = typeof values[2] !== 'undefined' ? values[2] : null;
-
-    if (!isArray(scopedData)) {
-      return initial;
-    }
-
-    return scopedData.reduce(function (accumulator, current) {
-      return apply(scopedLogic, {
-        current: current,
-        accumulator: accumulator
-      });
-    }, initial);
-  }
-
-  reduce.deepFirst = false;
-
-  function some(apply, data, values) {
-    var filtered = apply({
-      filter: values
-    }, data);
-    return filtered.length > 0;
-  }
-
-  some.deepFirst = false;
-
-  function and(apply, data, values) {
-    var current;
-
-    for (var i = 0; i < values.length; i++) {
-      current = apply(values[i], data);
-
-      if (!truthy(current)) {
-        return current;
-      }
-    }
-
-    return current; // Last
-  }
-
-  and.deepFirst = false;
-
-  function condition(apply, data, values) {
-    var i;
-    /* 'if' should be called with a odd number of parameters, 3 or greater
-      This works on the pattern:
-      if( 0 ){ 1 }else{ 2 };
-      if( 0 ){ 1 }else if( 2 ){ 3 }else{ 4 };
-      if( 0 ){ 1 }else if( 2 ){ 3 }else if( 4 ){ 5 }else{ 6 };
-       The implementation is:
-      For pairs of values (0,1 then 2,3 then 4,5 etc)
-      If the first evaluates truthy, evaluate and return the second
-      If the first evaluates falsy, jump to the next pair (e.g, 0,1 to 2,3)
-      given one parameter, evaluate and return it. (it's an Else and all the If/ElseIf were false)
-      given 0 parameters, return NULL (not great practice, but there was no Else)
-      */
-
-    for (i = 0; i < values.length - 1; i += 2) {
-      if (truthy(apply(values[i], data))) {
-        return apply(values[i + 1], data);
-      }
-    }
-
-    if (values.length === i + 1) {
-      return apply(values[i], data);
-    }
-
-    return null;
-  }
-
-  condition.op = ['if', '?:'];
-  condition.deepFirst = false;
-
-  function equal(a, b) {
-    // eslint-disable-next-line eqeqeq
-    return a == b;
-  }
-
-  equal.op = '==';
-
-  function not(a) {
-    return !truthy(a);
-  }
-
-  not.op = '!';
-
-  function notEqual(a, b) {
-    // eslint-disable-next-line eqeqeq
-    return a != b;
-  }
-
-  notEqual.op = '!=';
-
-  truthy.op = '!!';
-
-  function or(apply, data, values) {
-    var current;
-
-    for (var i = 0; i < values.length; i++) {
-      current = apply(values[i], data);
-
-      if (truthy(current)) {
-        return current;
-      }
-    }
-
-    return current; // Last
-  }
-
-  or.deepFirst = false;
-
-  function strictEqual(a, b) {
-    return a === b;
-  }
-
-  strictEqual.op = '===';
-
-  function strictNotEqual(a, b) {
-    return a !== b;
-  }
-
-  strictNotEqual.op = '!==';
-
-  function indexOf(a, b) {
-    if (!b || typeof b.indexOf === 'undefined') return false;
-    return b.indexOf(a) !== -1;
-  }
-
-  indexOf.op = 'in';
-
-  function log(a) {
-    // eslint-disable-next-line no-console
-    console.log(a);
-    return a;
-  }
-
-  function method(obj, methodName, args) {
-    // eslint-disable-next-line prefer-spread
-    return obj[methodName].apply(obj, args);
-  }
-
-  function greater(a, b) {
-    return a > b;
-  }
-
-  greater.op = '>';
-
-  function greaterEqual(a, b) {
-    return a >= b;
-  }
-
-  greaterEqual.op = '>=';
-
-  function less(a, b, c) {
-    return c === undefined ? a < b : a < b && b < c;
-  }
-
-  less.op = '<';
-
-  function lessEqual(a, b, c) {
-    return c === undefined ? a <= b : a <= b && b <= c;
-  }
-
-  lessEqual.op = '<=';
-
-  function max() {
-    return Math.max.apply(Math, arguments);
-  }
-
-  function min() {
-    return Math.min.apply(Math, arguments);
-  }
-
-  function cat() {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return args.join('');
-  }
-
-  function substr(source, start, end) {
-    if (end < 0) {
-      // JavaScript doesn't support negative end, this emulates PHP behavior
-      var temp = String(source).substr(start);
-      return temp.substr(0, temp.length + end);
-    }
-
-    return String(source).substr(start, end);
-  }
-
-
-
-  var operations = /*#__PURE__*/Object.freeze({
-    variable: variable,
-    missing: missing,
-    missing_some: missing_some,
-    add: add,
-    divide: divide,
-    modulo: modulo,
-    multiply: multiply,
-    subtract: subtract,
-    all: all,
-    filter: filter,
-    map: map,
-    merge: merge,
-    none: none,
-    reduce: reduce,
-    some: some,
-    and: and,
-    condition: condition,
-    equal: equal,
-    not: not,
-    notEqual: notEqual,
-    notnot: truthy,
-    or: or,
-    strictEqual: strictEqual,
-    strictNotEqual: strictNotEqual,
-    indexOf: indexOf,
-    log: log,
-    method: method,
-    greater: greater,
-    greaterEqual: greaterEqual,
-    less: less,
-    lessEqual: lessEqual,
-    max: max,
-    min: min,
-    cat: cat,
-    substr: substr
-  });
-
   function get_values(logic) {
-    return logic[get_operator(logic)];
+    return logic[get_operator_name(logic)];
   }
 
   /**
@@ -593,7 +135,7 @@
     var collection = [];
 
     if (is_logic(logic)) {
-      var op = get_operator(logic);
+      var op = get_operator_name(logic);
       var values = logic[op];
 
       if (!isArray(values)) {
@@ -641,8 +183,8 @@
 
     if (is_logic(pattern)) {
       if (is_logic(rule)) {
-        var pattern_op = get_operator(pattern);
-        var rule_op = get_operator(rule);
+        var pattern_op = get_operator_name(pattern);
+        var rule_op = get_operator_name(rule);
 
         if (pattern_op === '@' || pattern_op === rule_op) {
           // echo "\nOperators match, go deeper\n";
@@ -680,11 +222,455 @@
     return false;
   }
 
-  var jsonLogic = createJsonLogic(operations); // restore original public API
+  // export default function add(...args) {
+  var op_add = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return args.reduce(function (a, b) {
+      return parseFloat(a) + parseFloat(b);
+    }, 0);
+  });
+
+  var op_all = (function (apply, data, raw_args) {
+    var scopedData = apply(raw_args[0], data);
+    var scopedLogic = raw_args[1]; // All of an empty set is false. Note, some and none have correct fallback after the for loop
+
+    if (!scopedData.length) {
+      return false;
+    }
+
+    for (var i = 0; i < scopedData.length; i += 1) {
+      if (!truthy(apply(scopedLogic, scopedData[i]))) {
+        return false; // First falsy, short circuit
+      }
+    }
+
+    return true; // All were truthy
+  });
+
+  var op_and = (function (apply, data, raw_args) {
+    var arg;
+
+    for (var _iterator = raw_args, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      var _ref;
+
+      if (_isArray) {
+        if (_i >= _iterator.length) break;
+        _ref = _iterator[_i++];
+      } else {
+        _i = _iterator.next();
+        if (_i.done) break;
+        _ref = _i.value;
+      }
+
+      var raw_arg = _ref;
+      arg = apply(raw_arg, data);
+
+      if (!truthy(arg)) {
+        return arg;
+      }
+    }
+
+    return arg; // Last
+  });
+
+  var op_cat = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return args.join('');
+  });
+
+  var op_divide = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    return a / b;
+  });
+
+  var op_equal = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1]; // eslint-disable-next-line eqeqeq
+
+
+    return a == b;
+  });
+
+  var op_filter = (function (apply, data, raw_args) {
+    var scopedData = apply(raw_args[0], data);
+    var scopedLogic = raw_args[1];
+
+    if (!isArray(scopedData)) {
+      return [];
+    } // Return only the elements from the array in the first argument,
+    // that return truthy when passed to the logic in the second argument.
+    // For parity with JavaScript, reindex the returned array
+
+
+    return scopedData.filter(function (datum) {
+      return truthy(apply(scopedLogic, datum));
+    });
+  });
+
+  var op_greater = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    return a > b;
+  });
+
+  var op_greaterEqual = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    return a >= b;
+  });
+
+  var op_if = (function (apply, data, raw_args) {
+    var i;
+    /* 'if' should be called with a odd number of parameters, 3 or greater
+      This works on the pattern:
+      if( 0 ){ 1 }else{ 2 };
+      if( 0 ){ 1 }else if( 2 ){ 3 }else{ 4 };
+      if( 0 ){ 1 }else if( 2 ){ 3 }else if( 4 ){ 5 }else{ 6 };
+       The implementation is:
+      For pairs of values (0,1 then 2,3 then 4,5 etc)
+      If the first evaluates truthy, evaluate and return the second
+      If the first evaluates falsy, jump to the next pair (e.g, 0,1 to 2,3)
+      given one parameter, evaluate and return it. (it's an Else and all the If/ElseIf were false)
+      given 0 parameters, return NULL (not great practice, but there was no Else)
+      */
+
+    for (i = 0; i < raw_args.length - 1; i += 2) {
+      if (truthy(apply(raw_args[i], data))) {
+        return apply(raw_args[i + 1], data);
+      }
+    }
+
+    if (raw_args.length === i + 1) {
+      return apply(raw_args[i], data);
+    }
+
+    return null;
+  });
+
+  var op_in = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    if (!b || typeof b.indexOf === 'undefined') return false;
+    return b.indexOf(a) !== -1;
+  });
+
+  var op_less = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1],
+        c = _apply[2];
+
+    return c === undefined ? a < b : a < b && b < c;
+  });
+
+  var op_lessEqual = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1],
+        c = _apply[2];
+
+    return c === undefined ? a <= b : a <= b && b <= c;
+  });
+
+  var op_log = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0]; // eslint-disable-next-line no-console
+
+
+    console.log(a);
+    return a;
+  });
+
+  var op_map = (function (apply, data, raw_args) {
+    var scopedData = apply(raw_args[0], data);
+    var scopedLogic = raw_args[1];
+
+    if (!isArray(scopedData)) {
+      return [];
+    }
+
+    return scopedData.map(function (datum) {
+      return apply(scopedLogic, datum);
+    });
+  });
+
+  var op_max = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return Math.max.apply(Math, args);
+  });
+
+  var op_merge = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return args.reduce(function (a, b) {
+      return a.concat(b);
+    }, []);
+  });
+
+  var op_method = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        obj = _apply[0],
+        methodName = _apply[1],
+        args = _apply[2]; // eslint-disable-next-line prefer-spread
+
+
+    return obj[methodName].apply(obj, args);
+  });
+
+  var op_min = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return Math.min.apply(Math, args);
+  });
+
+  var op_var = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        var_name = _apply[0],
+        default_value = _apply[1];
+
+    if (var_name == null || var_name === '') {
+      // TODO: shorten to var_name == null?
+      return data;
+    }
+
+    for (var _iterator = String(var_name).split('.'), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      var _ref;
+
+      if (_isArray) {
+        if (_i >= _iterator.length) break;
+        _ref = _iterator[_i++];
+      } else {
+        _i = _iterator.next();
+        if (_i.done) break;
+        _ref = _i.value;
+      }
+
+      var sub_var_name = _ref;
+      data = data[sub_var_name];
+      if (!data) break;
+    }
+
+    return data != null ? data : default_value != null ? default_value : null;
+  });
+
+  var op_missing = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    /*
+    Missing can receive many keys as many arguments, like {"missing:[1,2]}
+    Missing can also receive *one* argument that is an array of keys,
+    which typically happens if it's actually acting on the output of another command
+    (like 'if' or 'merge')
+    */
+
+    var are_missing = [];
+    var keys = isArray(args[0]) ? args[0] : args;
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var value = op_var(apply, data, [key]);
+
+      if (value === null || value === '') {
+        are_missing.push(key);
+      }
+    }
+
+    return are_missing;
+  });
+
+  var op_missing_some = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        need_count = _apply[0],
+        options = _apply[1]; // missing_some takes two arguments, how many (minimum) items must be present, and an array of keys (just like 'missing') to check for presence.
+
+
+    var are_missing = op_missing(apply, data, [options]);
+
+    if (options.length - are_missing.length >= need_count) {
+      return [];
+    }
+
+    return are_missing;
+  });
+
+  var op_modulo = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    return a % b;
+  });
+
+  var op_multiply = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return args.reduce(function (a, b) {
+      return parseFloat(a) * parseFloat(b);
+    }, 1);
+  });
+
+  var op_none = (function (apply, data, raw_args) {
+    var filtered = apply({
+      filter: raw_args
+    }, data);
+    return filtered.length === 0;
+  });
+
+  var op_not = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0];
+
+    return !truthy(a);
+  });
+
+  var op_notEqual = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1]; // eslint-disable-next-line eqeqeq
+
+
+    return a != b;
+  });
+
+  var op_notnot = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0];
+
+    return truthy(a);
+  });
+
+  var op_or = (function (apply, data, raw_args) {
+    var current;
+
+    for (var i = 0; i < raw_args.length; i++) {
+      current = apply(raw_args[i], data);
+
+      if (truthy(current)) {
+        return current;
+      }
+    }
+
+    return current; // Last
+  });
+
+  var op_reduce = (function (apply, data, raw_args) {
+    var scopedData = apply(raw_args[0], data);
+    var scopedLogic = raw_args[1];
+    var initial = typeof raw_args[2] !== 'undefined' ? raw_args[2] : null;
+
+    if (!isArray(scopedData)) {
+      return initial;
+    }
+
+    return scopedData.reduce(function (accumulator, current) {
+      return apply(scopedLogic, {
+        current: current,
+        accumulator: accumulator
+      });
+    }, initial);
+  });
+
+  var op_some = (function (apply, data, raw_args) {
+    var filtered = apply({
+      filter: raw_args
+    }, data);
+    return filtered.length > 0;
+  });
+
+  var op_strictEqual = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    return a === b;
+  });
+
+  var op_strictNotEqual = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    return a !== b;
+  });
+
+  var op_substr = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        source = _apply[0],
+        start = _apply[1],
+        end = _apply[2];
+
+    if (end < 0) {
+      // JavaScript doesn't support negative end, this emulates PHP behavior
+      var temp = String(source).substr(start);
+      return temp.substr(0, temp.length + end);
+    }
+
+    return String(source).substr(start, end);
+  });
+
+  var op_subtract = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    if (b === undefined) {
+      return -a;
+    }
+
+    return a - b;
+  });
+
+  var jsonLogic = createJsonLogic({
+    /* eslint-disable */
+    '+': op_add,
+    'all': op_all,
+    'and': op_and,
+    'cat': op_cat,
+    '/': op_divide,
+    '==': op_equal,
+    'filter': op_filter,
+    '>': op_greater,
+    '>=': op_greaterEqual,
+    '?:': op_if,
+    'if': op_if,
+    'in': op_in,
+    '<': op_less,
+    '<=': op_lessEqual,
+    'log': op_log,
+    'map': op_map,
+    'max': op_max,
+    'merge': op_merge,
+    'method': op_method,
+    'min': op_min,
+    'missing': op_missing,
+    'missing_some': op_missing_some,
+    '%': op_modulo,
+    '*': op_multiply,
+    'none': op_none,
+    '!': op_not,
+    '!=': op_notEqual,
+    '!!': op_notnot,
+    'or': op_or,
+    'reduce': op_reduce,
+    'some': op_some,
+    '===': op_strictEqual,
+    '!==': op_strictNotEqual,
+    'substr': op_substr,
+    '-': op_subtract,
+    'var': op_var
+    /* eslint-enable */
+
+  }); // restore original public API
 
   jsonLogic.is_logic = is_logic;
   jsonLogic.truthy = truthy;
-  jsonLogic.get_operator = get_operator;
+  jsonLogic.get_operator = get_operator_name;
   jsonLogic.get_values = get_values;
   jsonLogic.uses_data = uses_data;
   jsonLogic.rule_like = rule_like;

@@ -1,0 +1,15 @@
+module.exports = {
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": false,
+        "useBuiltIns": false,
+        "loose": true
+      }
+    ]
+  ],
+  "plugins": [
+    "@babel/plugin-proposal-export-default-from"
+  ]
+}
