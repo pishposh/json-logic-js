@@ -1,6 +1,6 @@
 import truthy from '../helpers/truthy';
 
-const op = (apply, data, raw_args) => {
+export default (apply, data, raw_args) => {
   const scopedData = apply(raw_args[0], data);
   const scopedLogic = raw_args[1];
   // All of an empty set is false. Note, some and none have correct fallback after the for loop
@@ -13,7 +13,4 @@ const op = (apply, data, raw_args) => {
     }
   }
   return true; // All were truthy
-};
-
-op.deepFirst = false;
-export default op;
+}

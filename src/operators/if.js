@@ -1,7 +1,7 @@
 import truthy from '../helpers/truthy';
 
 // function condition(apply, data, values) {
-const op = (apply, data, raw_args) => {
+export default (apply, data, raw_args) => {
   let i;
 
   /* 'if' should be called with a odd number of parameters, 3 or greater
@@ -28,7 +28,4 @@ const op = (apply, data, raw_args) => {
   }
 
   return null;
-};
-
-op.deepFirst = false;
-export default op;
+}

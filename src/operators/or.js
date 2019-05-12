@@ -1,7 +1,7 @@
 import truthy from '../helpers/truthy';
 
 // function or(apply, data, values) {
-const op = (apply, data, raw_args) => {
+export default (apply, data, raw_args) => {
   let current;
 
   for (let i = 0; i < raw_args.length; i++) {
@@ -11,7 +11,4 @@ const op = (apply, data, raw_args) => {
     }
   }
   return current; // Last
-};
-
-op.deepFirst = false;
-export default op;
+}
