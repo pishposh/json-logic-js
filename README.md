@@ -144,5 +144,4 @@ Check out the [documentation for adding custom operations](http://jsonlogic.com/
 
 You can specify the following meta tags as properties of your operators function:
 - `op`: usefull if you operator name should be a reserver keyword, like `var`, `<`, `+`, etc., type **string**
-- `withApply`: usefull if you need more control over operator recursion, type **boolean**
 - `deepFirst`: usefull disable default deep-first recursion, type **boolean**

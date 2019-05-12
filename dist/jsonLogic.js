@@ -94,12 +94,6 @@
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
 
       if (typeof operator === 'function') {
-        var withApply = operator.withApply;
-
-        if (withApply) {
-          values.unshift(apply);
-        }
-
         return operator.apply(data, values);
       }
 
@@ -158,7 +152,7 @@
 
   variable.op = 'var';
 
-  function missing(apply) {
+  function missing() {
     /*
     Missing can receive many keys as many arguments, like {"missing:[1,2]}
     Missing can also receive *one* argument that is an array of keys,
@@ -167,17 +161,15 @@
     */
     var are_missing = [];
 
-    for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      args[_key - 1] = arguments[_key];
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
     }
 
     var keys = isArray(args[0]) ? args[0] : args;
 
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i];
-      var value = apply({
-        "var": key
-      }, this);
+      var value = variable.call(this, key);
 
       if (value === null || value === '') {
         are_missing.push(key);
@@ -187,13 +179,9 @@
     return are_missing;
   }
 
-  missing.withApply = true;
-
-  function missing_some(apply, need_count, options) {
+  function missing_some(need_count, options) {
     // missing_some takes two arguments, how many (minimum) items must be present, and an array of keys (just like 'missing') to check for presence.
-    var are_missing = apply({
-      missing: options
-    }, this);
+    var are_missing = missing.call(this, options);
 
     if (options.length - are_missing.length >= need_count) {
       return [];
@@ -201,8 +189,6 @@
 
     return are_missing;
   }
-
-  missing_some.withApply = true;
 
   function add() {
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {

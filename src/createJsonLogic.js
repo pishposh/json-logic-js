@@ -67,12 +67,6 @@ function createJsonLogic(_operations) {
     // Structured commands like % or > can name formal arguments while flexible commands (like missing or merge) can operate on the pseudo-array arguments
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
     if (typeof operator === 'function') {
-      const { withApply } = operator;
-
-      if (withApply) {
-        values.unshift(apply);
-      }
-
       return operator.apply(data, values);
     }
 

@@ -1,6 +1,7 @@
 import isArray from '../../helpers/isArray';
+import variable from './variable';
 
-function missing(apply, ...args) {
+function missing(...args) {
   /*
   Missing can receive many keys as many arguments, like {"missing:[1,2]}
   Missing can also receive *one* argument that is an array of keys,
@@ -13,7 +14,7 @@ function missing(apply, ...args) {
 
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    const value = apply({ var: key }, this);
+    const value = variable.call(this, key);
     if (value === null || value === '') {
       are_missing.push(key);
     }
@@ -21,7 +22,5 @@ function missing(apply, ...args) {
 
   return are_missing;
 }
-
-missing.withApply = true;
 
 export default missing;
