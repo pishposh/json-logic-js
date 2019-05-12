@@ -230,7 +230,7 @@
     }, 0);
   });
 
-  var op_all = (function (apply, data, raw_args) {
+  var op = function op(apply, data, raw_args) {
     var scopedData = apply(raw_args[0], data);
     var scopedLogic = raw_args[1]; // All of an empty set is false. Note, some and none have correct fallback after the for loop
 
@@ -245,9 +245,11 @@
     }
 
     return true; // All were truthy
-  });
+  };
 
-  var op_and = (function (apply, data, raw_args) {
+  op.deepFirst = false;
+
+  var op$1 = function op(apply, data, raw_args) {
     var arg;
 
     for (var _iterator = raw_args, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
@@ -271,7 +273,9 @@
     }
 
     return arg; // Last
-  });
+  };
+
+  op$1.deepFirst = false;
 
   var op_cat = (function (apply, data, raw_args) {
     var args = apply(raw_args, data);
@@ -295,7 +299,7 @@
     return a == b;
   });
 
-  var op_filter = (function (apply, data, raw_args) {
+  var op$2 = function op(apply, data, raw_args) {
     var scopedData = apply(raw_args[0], data);
     var scopedLogic = raw_args[1];
 
@@ -309,7 +313,9 @@
     return scopedData.filter(function (datum) {
       return truthy(apply(scopedLogic, datum));
     });
-  });
+  };
+
+  op$2.deepFirst = false;
 
   var op_greater = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
@@ -327,7 +333,7 @@
     return a >= b;
   });
 
-  var op_if = (function (apply, data, raw_args) {
+  var op$3 = function op(apply, data, raw_args) {
     var i;
     /* 'if' should be called with a odd number of parameters, 3 or greater
       This works on the pattern:
@@ -353,7 +359,9 @@
     }
 
     return null;
-  });
+  };
+
+  op$3.deepFirst = false;
 
   var op_in = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
@@ -391,7 +399,7 @@
     return a;
   });
 
-  var op_map = (function (apply, data, raw_args) {
+  var op$4 = function op(apply, data, raw_args) {
     var scopedData = apply(raw_args[0], data);
     var scopedLogic = raw_args[1];
 
@@ -402,7 +410,9 @@
     return scopedData.map(function (datum) {
       return apply(scopedLogic, datum);
     });
-  });
+  };
+
+  op$4.deepFirst = false;
 
   var op_max = (function (apply, data, raw_args) {
     var args = apply(raw_args, data);
@@ -515,12 +525,14 @@
     }, 1);
   });
 
-  var op_none = (function (apply, data, raw_args) {
+  var op$5 = function op(apply, data, raw_args) {
     var filtered = apply({
       filter: raw_args
     }, data);
     return filtered.length === 0;
-  });
+  };
+
+  op$5.deepFirst = false;
 
   var op_not = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
@@ -545,7 +557,7 @@
     return truthy(a);
   });
 
-  var op_or = (function (apply, data, raw_args) {
+  var op$6 = function op(apply, data, raw_args) {
     var current;
 
     for (var i = 0; i < raw_args.length; i++) {
@@ -557,9 +569,11 @@
     }
 
     return current; // Last
-  });
+  };
 
-  var op_reduce = (function (apply, data, raw_args) {
+  op$6.deepFirst = false;
+
+  var op$7 = function op(apply, data, raw_args) {
     var scopedData = apply(raw_args[0], data);
     var scopedLogic = raw_args[1];
     var initial = typeof raw_args[2] !== 'undefined' ? raw_args[2] : null;
@@ -574,14 +588,18 @@
         accumulator: accumulator
       });
     }, initial);
-  });
+  };
 
-  var op_some = (function (apply, data, raw_args) {
+  op$7.deepFirst = false;
+
+  var op$8 = function op(apply, data, raw_args) {
     var filtered = apply({
       filter: raw_args
     }, data);
     return filtered.length > 0;
-  });
+  };
+
+  op$8.deepFirst = false;
 
   var op_strictEqual = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
@@ -629,21 +647,21 @@
   var jsonLogic = createJsonLogic({
     /* eslint-disable */
     '+': op_add,
-    'all': op_all,
-    'and': op_and,
+    'all': op,
+    'and': op$1,
     'cat': op_cat,
     '/': op_divide,
     '==': op_equal,
-    'filter': op_filter,
+    'filter': op$2,
     '>': op_greater,
     '>=': op_greaterEqual,
-    '?:': op_if,
-    'if': op_if,
+    '?:': op$3,
+    'if': op$3,
     'in': op_in,
     '<': op_less,
     '<=': op_lessEqual,
     'log': op_log,
-    'map': op_map,
+    'map': op$4,
     'max': op_max,
     'merge': op_merge,
     'method': op_method,
@@ -652,13 +670,13 @@
     'missing_some': op_missing_some,
     '%': op_modulo,
     '*': op_multiply,
-    'none': op_none,
+    'none': op$5,
     '!': op_not,
     '!=': op_notEqual,
     '!!': op_notnot,
-    'or': op_or,
-    'reduce': op_reduce,
-    'some': op_some,
+    'or': op$6,
+    'reduce': op$7,
+    'some': op$8,
     '===': op_strictEqual,
     '!==': op_strictNotEqual,
     'substr': op_substr,
