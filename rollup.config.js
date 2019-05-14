@@ -24,7 +24,7 @@ module.exports = [{
     resolve(),
     babel(),
     uglify.uglify(),
-    optimize(),
+    // optimize(),
     filesize({ showMinifiedSize: false }),
   ],
   output: {

@@ -1,5 +1,5 @@
-// export default function add(...args) {
-export default (apply, data, raw_args) => {
-  const args = apply(raw_args, data);
+import preapply_args from '../helpers/preapply_args';
+
+export default preapply_args((...args) => {
   return args.reduce((a, b) => parseFloat(a) + parseFloat(b), 0);
-}
+});

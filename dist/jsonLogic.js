@@ -222,9 +222,17 @@
     return false;
   }
 
-  // export default function add(...args) {
-  var op_add = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
+  var preapply_args = (function (fn) {
+    return function (apply, data, raw_args) {
+      return fn.apply(void 0, apply(raw_args, data));
+    };
+  });
+
+  var op_add = preapply_args(function () {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
     return args.reduce(function (a, b) {
       return parseFloat(a) + parseFloat(b);
     }, 0);
@@ -273,25 +281,20 @@
     return arg; // Last
   });
 
-  var op_cat = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
+  var op_cat = preapply_args(function () {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
     return args.join('');
   });
 
-  var op_divide = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
+  var op_divide = preapply_args(function (a, b) {
     return a / b;
   });
 
-  var op_equal = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1]; // eslint-disable-next-line eqeqeq
-
-
+  var op_equal = preapply_args(function (a, b) {
+    // eslint-disable-next-line eqeqeq
     return a == b;
   });
 
@@ -311,19 +314,11 @@
     });
   });
 
-  var op_greater = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
+  var op_greater = preapply_args(function (a, b) {
     return a > b;
   });
 
-  var op_greaterEqual = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
+  var op_greaterEqual = preapply_args(function (a, b) {
     return a >= b;
   });
 
@@ -355,38 +350,21 @@
     return null;
   });
 
-  var op_in = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
+  var op_in = preapply_args(function (a, b) {
     if (!b || typeof b.indexOf === 'undefined') return false;
     return b.indexOf(a) !== -1;
   });
 
-  var op_less = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1],
-        c = _apply[2];
-
+  var op_less = preapply_args(function (a, b, c) {
     return c === undefined ? a < b : a < b && b < c;
   });
 
-  var op_lessEqual = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1],
-        c = _apply[2];
-
+  var op_lessEqual = preapply_args(function (a, b, c) {
     return c === undefined ? a <= b : a <= b && b <= c;
   });
 
-  var op_log = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0]; // eslint-disable-next-line no-console
-
-
+  var op_log = preapply_args(function (a) {
+    // eslint-disable-next-line no-console
     console.log(a);
     return a;
   });
@@ -404,31 +382,27 @@
     });
   });
 
-  var op_max = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
-    return Math.max.apply(Math, args);
+  var op_max = preapply_args(function () {
+    return Math.max.apply(Math, arguments);
   });
 
-  var op_merge = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
+  var op_merge = preapply_args(function () {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
     return args.reduce(function (a, b) {
       return a.concat(b);
     }, []);
   });
 
-  var op_method = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        obj = _apply[0],
-        methodName = _apply[1],
-        args = _apply[2]; // eslint-disable-next-line prefer-spread
-
-
+  var op_method = preapply_args(function (obj, methodName, args) {
+    // eslint-disable-next-line prefer-spread
     return obj[methodName].apply(obj, args);
   });
 
-  var op_min = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
-    return Math.min.apply(Math, args);
+  var op_min = preapply_args(function () {
+    return Math.min.apply(Math, arguments);
   });
 
   var op_var = (function (apply, data, raw_args) {
@@ -500,16 +474,15 @@
     return are_missing;
   });
 
-  var op_modulo = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
+  var op_modulo = preapply_args(function (a, b) {
     return a % b;
   });
 
-  var op_multiply = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
+  var op_multiply = preapply_args(function () {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
     return args.reduce(function (a, b) {
       return parseFloat(a) * parseFloat(b);
     }, 1);
@@ -522,26 +495,16 @@
     return filtered.length === 0;
   });
 
-  var op_not = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0];
-
+  var op_not = preapply_args(function (a) {
     return !truthy(a);
   });
 
-  var op_notEqual = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1]; // eslint-disable-next-line eqeqeq
-
-
+  var op_notEqual = preapply_args(function (a, b) {
+    // eslint-disable-next-line eqeqeq
     return a != b;
   });
 
-  var op_notnot = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0];
-
+  var op_notnot = preapply_args(function (a) {
     return truthy(a);
   });
 
@@ -583,28 +546,15 @@
     return filtered.length > 0;
   });
 
-  var op_strictEqual = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
+  var op_strictEqual = preapply_args(function (a, b) {
     return a === b;
   });
 
-  var op_strictNotEqual = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
+  var op_strictNotEqual = preapply_args(function (a, b) {
     return a !== b;
   });
 
-  var op_substr = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        source = _apply[0],
-        start = _apply[1],
-        end = _apply[2];
-
+  var op_substr = preapply_args(function (source, start, end) {
     if (end < 0) {
       // JavaScript doesn't support negative end, this emulates PHP behavior
       var temp = String(source).substr(start);
@@ -614,11 +564,7 @@
     return String(source).substr(start, end);
   });
 
-  var op_subtract = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
+  var op_subtract = preapply_args(function (a, b) {
     if (b === undefined) {
       return -a;
     }
