@@ -1,6 +1,6 @@
 const babel = require('rollup-plugin-babel');
 const resolve = require('rollup-plugin-node-resolve');
-const uglify = require('rollup-plugin-uglify');
+const { terser } = require('rollup-plugin-terser');
 const optimize = require('rollup-plugin-optimize-js');
 const filesize = require('rollup-plugin-filesize');
 
@@ -23,7 +23,7 @@ module.exports = [{
   plugins: [
     resolve(),
     babel(),
-    uglify.uglify(),
+    terser(),
     optimize(),
     filesize({ showMinifiedSize: false }),
   ],

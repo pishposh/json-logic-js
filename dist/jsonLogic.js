@@ -222,15 +222,14 @@
     return false;
   }
 
-  // export default function add(...args) {
-  var op_add = (function (apply, data, raw_args) {
+  var add = (function (apply, data, raw_args) {
     var args = apply(raw_args, data);
     return args.reduce(function (a, b) {
       return parseFloat(a) + parseFloat(b);
     }, 0);
   });
 
-  var op_all = (function (apply, data, raw_args) {
+  var all = (function (apply, data, raw_args) {
     var scopedData = apply(raw_args[0], data);
     var scopedLogic = raw_args[1]; // All of an empty set is false. Note, some and none have correct fallback after the for loop
 
@@ -247,7 +246,7 @@
     return true; // All were truthy
   });
 
-  var op_and = (function (apply, data, raw_args) {
+  var and = (function (apply, data, raw_args) {
     var arg;
 
     for (var _iterator = raw_args, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
@@ -273,12 +272,12 @@
     return arg; // Last
   });
 
-  var op_cat = (function (apply, data, raw_args) {
+  var cat = (function (apply, data, raw_args) {
     var args = apply(raw_args, data);
     return args.join('');
   });
 
-  var op_divide = (function (apply, data, raw_args) {
+  var divide = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1];
@@ -286,7 +285,7 @@
     return a / b;
   });
 
-  var op_equal = (function (apply, data, raw_args) {
+  var equal = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1]; // eslint-disable-next-line eqeqeq
@@ -295,7 +294,7 @@
     return a == b;
   });
 
-  var op_filter = (function (apply, data, raw_args) {
+  var filter = (function (apply, data, raw_args) {
     var scopedData = apply(raw_args[0], data);
     var scopedLogic = raw_args[1];
 
@@ -311,7 +310,7 @@
     });
   });
 
-  var op_greater = (function (apply, data, raw_args) {
+  var greater = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1];
@@ -319,7 +318,7 @@
     return a > b;
   });
 
-  var op_greaterEqual = (function (apply, data, raw_args) {
+  var greaterEqual = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1];
@@ -327,7 +326,7 @@
     return a >= b;
   });
 
-  var op_if = (function (apply, data, raw_args) {
+  var _if = (function (apply, data, raw_args) {
     var i;
     /* 'if' should be called with a odd number of parameters, 3 or greater
       This works on the pattern:
@@ -355,7 +354,7 @@
     return null;
   });
 
-  var op_in = (function (apply, data, raw_args) {
+  var _in = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1];
@@ -364,7 +363,7 @@
     return b.indexOf(a) !== -1;
   });
 
-  var op_less = (function (apply, data, raw_args) {
+  var less = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1],
@@ -373,7 +372,7 @@
     return c === undefined ? a < b : a < b && b < c;
   });
 
-  var op_lessEqual = (function (apply, data, raw_args) {
+  var lessEqual = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1],
@@ -382,7 +381,7 @@
     return c === undefined ? a <= b : a <= b && b <= c;
   });
 
-  var op_log = (function (apply, data, raw_args) {
+  var log = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0]; // eslint-disable-next-line no-console
 
@@ -391,7 +390,7 @@
     return a;
   });
 
-  var op_map = (function (apply, data, raw_args) {
+  var map = (function (apply, data, raw_args) {
     var scopedData = apply(raw_args[0], data);
     var scopedLogic = raw_args[1];
 
@@ -404,19 +403,19 @@
     });
   });
 
-  var op_max = (function (apply, data, raw_args) {
+  var max = (function (apply, data, raw_args) {
     var args = apply(raw_args, data);
     return Math.max.apply(Math, args);
   });
 
-  var op_merge = (function (apply, data, raw_args) {
+  var merge = (function (apply, data, raw_args) {
     var args = apply(raw_args, data);
     return args.reduce(function (a, b) {
       return a.concat(b);
     }, []);
   });
 
-  var op_method = (function (apply, data, raw_args) {
+  var method = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         obj = _apply[0],
         methodName = _apply[1],
@@ -426,12 +425,12 @@
     return obj[methodName].apply(obj, args);
   });
 
-  var op_min = (function (apply, data, raw_args) {
+  var min = (function (apply, data, raw_args) {
     var args = apply(raw_args, data);
     return Math.min.apply(Math, args);
   });
 
-  var op_var = (function (apply, data, raw_args) {
+  var variable = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         var_name = _apply[0],
         default_value = _apply[1];
@@ -461,7 +460,7 @@
     return data != null ? data : default_value != null ? default_value : null;
   });
 
-  var op_missing = (function (apply, data, raw_args) {
+  var missing = (function (apply, data, raw_args) {
     var args = apply(raw_args, data);
     /*
     Missing can receive many keys as many arguments, like {"missing:[1,2]}
@@ -475,7 +474,7 @@
 
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i];
-      var value = op_var(apply, data, [key]);
+      var value = variable(apply, data, [key]);
 
       if (value === null || value === '') {
         are_missing.push(key);
@@ -485,13 +484,13 @@
     return are_missing;
   });
 
-  var op_missing_some = (function (apply, data, raw_args) {
+  var missing_some = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         need_count = _apply[0],
         options = _apply[1]; // missing_some takes two arguments, how many (minimum) items must be present, and an array of keys (just like 'missing') to check for presence.
 
 
-    var are_missing = op_missing(apply, data, [options]);
+    var are_missing = missing(apply, data, [options]);
 
     if (options.length - are_missing.length >= need_count) {
       return [];
@@ -500,7 +499,7 @@
     return are_missing;
   });
 
-  var op_modulo = (function (apply, data, raw_args) {
+  var modulo = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1];
@@ -508,28 +507,28 @@
     return a % b;
   });
 
-  var op_multiply = (function (apply, data, raw_args) {
+  var multiply = (function (apply, data, raw_args) {
     var args = apply(raw_args, data);
     return args.reduce(function (a, b) {
       return parseFloat(a) * parseFloat(b);
     }, 1);
   });
 
-  var op_none = (function (apply, data, raw_args) {
+  var none = (function (apply, data, raw_args) {
     var filtered = apply({
       filter: raw_args
     }, data);
     return filtered.length === 0;
   });
 
-  var op_not = (function (apply, data, raw_args) {
+  var not = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0];
 
     return !truthy(a);
   });
 
-  var op_notEqual = (function (apply, data, raw_args) {
+  var notEqual = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1]; // eslint-disable-next-line eqeqeq
@@ -538,14 +537,14 @@
     return a != b;
   });
 
-  var op_notnot = (function (apply, data, raw_args) {
+  var notnot = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0];
 
     return truthy(a);
   });
 
-  var op_or = (function (apply, data, raw_args) {
+  var or = (function (apply, data, raw_args) {
     var current;
 
     for (var i = 0; i < raw_args.length; i++) {
@@ -559,7 +558,7 @@
     return current; // Last
   });
 
-  var op_reduce = (function (apply, data, raw_args) {
+  var reduce = (function (apply, data, raw_args) {
     var scopedData = apply(raw_args[0], data);
     var scopedLogic = raw_args[1];
     var initial = typeof raw_args[2] !== 'undefined' ? raw_args[2] : null;
@@ -576,14 +575,14 @@
     }, initial);
   });
 
-  var op_some = (function (apply, data, raw_args) {
+  var some = (function (apply, data, raw_args) {
     var filtered = apply({
       filter: raw_args
     }, data);
     return filtered.length > 0;
   });
 
-  var op_strictEqual = (function (apply, data, raw_args) {
+  var strictEqual = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1];
@@ -591,7 +590,7 @@
     return a === b;
   });
 
-  var op_strictNotEqual = (function (apply, data, raw_args) {
+  var strictNotEqual = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1];
@@ -599,7 +598,7 @@
     return a !== b;
   });
 
-  var op_substr = (function (apply, data, raw_args) {
+  var substr = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         source = _apply[0],
         start = _apply[1],
@@ -614,7 +613,7 @@
     return String(source).substr(start, end);
   });
 
-  var op_subtract = (function (apply, data, raw_args) {
+  var subtract = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
         b = _apply[1];
@@ -628,42 +627,42 @@
 
   var jsonLogic = createJsonLogic({
     /* eslint-disable */
-    '+': op_add,
-    'all': op_all,
-    'and': op_and,
-    'cat': op_cat,
-    '/': op_divide,
-    '==': op_equal,
-    'filter': op_filter,
-    '>': op_greater,
-    '>=': op_greaterEqual,
-    '?:': op_if,
-    'if': op_if,
-    'in': op_in,
-    '<': op_less,
-    '<=': op_lessEqual,
-    'log': op_log,
-    'map': op_map,
-    'max': op_max,
-    'merge': op_merge,
-    'method': op_method,
-    'min': op_min,
-    'missing': op_missing,
-    'missing_some': op_missing_some,
-    '%': op_modulo,
-    '*': op_multiply,
-    'none': op_none,
-    '!': op_not,
-    '!=': op_notEqual,
-    '!!': op_notnot,
-    'or': op_or,
-    'reduce': op_reduce,
-    'some': op_some,
-    '===': op_strictEqual,
-    '!==': op_strictNotEqual,
-    'substr': op_substr,
-    '-': op_subtract,
-    'var': op_var
+    '+': add,
+    'all': all,
+    'and': and,
+    'cat': cat,
+    '/': divide,
+    '==': equal,
+    'filter': filter,
+    '>': greater,
+    '>=': greaterEqual,
+    '?:': _if,
+    'if': _if,
+    'in': _in,
+    '<': less,
+    '<=': lessEqual,
+    'log': log,
+    'map': map,
+    'max': max,
+    'merge': merge,
+    'method': method,
+    'min': min,
+    'missing': missing,
+    'missing_some': missing_some,
+    '%': modulo,
+    '*': multiply,
+    'none': none,
+    '!': not,
+    '!=': notEqual,
+    '!!': notnot,
+    'or': or,
+    'reduce': reduce,
+    'some': some,
+    '===': strictEqual,
+    '!==': strictNotEqual,
+    'substr': substr,
+    '-': subtract,
+    'var': variable
     /* eslint-enable */
 
   }); // restore original public API
