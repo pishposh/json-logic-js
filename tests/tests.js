@@ -136,10 +136,9 @@ QUnit.test('Bad operator', assert => {
 });
 
 QUnit.test('logging', assert => {
-  let old_console_log;
+  const old_console_log = console.log;
   let last_console;
   // eslint-disable-next-line func-names
-  old_console_log = console.log;
   console.log = function(logged) {
     last_console = logged;
   };

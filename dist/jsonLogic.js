@@ -20,7 +20,8 @@
 
   var createJsonLogicApply = (function (operators) {
     return function apply(logic, data) {
-      if (!data) data = {}; // Does this array contain logic? Only one way to find out.
+      if (!data) data = {}; // eslint-disable-line no-param-reassign
+      // Does this array contain logic? Only one way to find out.
 
       if (isArray(logic)) {
         return logic.map(function (l) {
@@ -177,214 +178,6 @@
     return false;
   }
 
-  var add = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
-    return args.reduce(function (a, b) {
-      return parseFloat(a) + parseFloat(b);
-    }, 0);
-  });
-
-  var all = (function (apply, data, raw_args) {
-    var scopedData = apply(raw_args[0], data);
-    var scopedLogic = raw_args[1]; // All of an empty set is false. Note, some and none have correct fallback after the for loop
-
-    if (!scopedData.length) {
-      return false;
-    }
-
-    for (var i = 0; i < scopedData.length; i += 1) {
-      if (!truthy(apply(scopedLogic, scopedData[i]))) {
-        return false; // First falsy, short circuit
-      }
-    }
-
-    return true; // All were truthy
-  });
-
-  var and = (function (apply, data, raw_args) {
-    var arg;
-
-    for (var _iterator = raw_args, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-      var _ref;
-
-      if (_isArray) {
-        if (_i >= _iterator.length) break;
-        _ref = _iterator[_i++];
-      } else {
-        _i = _iterator.next();
-        if (_i.done) break;
-        _ref = _i.value;
-      }
-
-      var raw_arg = _ref;
-      arg = apply(raw_arg, data);
-
-      if (!truthy(arg)) {
-        return arg;
-      }
-    }
-
-    return arg; // Last
-  });
-
-  var cat = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
-    return args.join('');
-  });
-
-  var divide = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
-    return a / b;
-  });
-
-  var equal = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1]; // eslint-disable-next-line eqeqeq
-
-
-    return a == b;
-  });
-
-  var filter = (function (apply, data, raw_args) {
-    var scopedData = apply(raw_args[0], data);
-    var scopedLogic = raw_args[1];
-
-    if (!isArray(scopedData)) {
-      return [];
-    } // Return only the elements from the array in the first argument,
-    // that return truthy when passed to the logic in the second argument.
-    // For parity with JavaScript, reindex the returned array
-
-
-    return scopedData.filter(function (datum) {
-      return truthy(apply(scopedLogic, datum));
-    });
-  });
-
-  var greater = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
-    return a > b;
-  });
-
-  var greaterEqual = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
-    return a >= b;
-  });
-
-  var _if = (function (apply, data, raw_args) {
-    var i;
-    /* 'if' should be called with a odd number of parameters, 3 or greater
-      This works on the pattern:
-      if( 0 ){ 1 }else{ 2 };
-      if( 0 ){ 1 }else if( 2 ){ 3 }else{ 4 };
-      if( 0 ){ 1 }else if( 2 ){ 3 }else if( 4 ){ 5 }else{ 6 };
-       The implementation is:
-      For pairs of values (0,1 then 2,3 then 4,5 etc)
-      If the first evaluates truthy, evaluate and return the second
-      If the first evaluates falsy, jump to the next pair (e.g, 0,1 to 2,3)
-      given one parameter, evaluate and return it. (it's an Else and all the If/ElseIf were false)
-      given 0 parameters, return NULL (not great practice, but there was no Else)
-      */
-
-    for (i = 0; i < raw_args.length - 1; i += 2) {
-      if (truthy(apply(raw_args[i], data))) {
-        return apply(raw_args[i + 1], data);
-      }
-    }
-
-    if (raw_args.length === i + 1) {
-      return apply(raw_args[i], data);
-    }
-
-    return null;
-  });
-
-  var _in = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
-    if (!b || typeof b.indexOf === 'undefined') return false;
-    return b.indexOf(a) !== -1;
-  });
-
-  var less = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1],
-        c = _apply[2];
-
-    return c === undefined ? a < b : a < b && b < c;
-  });
-
-  var lessEqual = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1],
-        c = _apply[2];
-
-    return c === undefined ? a <= b : a <= b && b <= c;
-  });
-
-  var log = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0]; // eslint-disable-next-line no-console
-
-
-    console.log(a);
-    return a;
-  });
-
-  var map = (function (apply, data, raw_args) {
-    var scopedData = apply(raw_args[0], data);
-    var scopedLogic = raw_args[1];
-
-    if (!isArray(scopedData)) {
-      return [];
-    }
-
-    return scopedData.map(function (datum) {
-      return apply(scopedLogic, datum);
-    });
-  });
-
-  var max = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
-    return Math.max.apply(Math, args);
-  });
-
-  var merge = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
-    return args.reduce(function (a, b) {
-      return a.concat(b);
-    }, []);
-  });
-
-  var method = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        obj = _apply[0],
-        methodName = _apply[1],
-        args = _apply[2]; // eslint-disable-next-line prefer-spread
-
-
-    return obj[methodName].apply(obj, args);
-  });
-
-  var min = (function (apply, data, raw_args) {
-    var args = apply(raw_args, data);
-    return Math.min.apply(Math, args);
-  });
-
   var variable = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         var_name = _apply[0],
@@ -393,7 +186,8 @@
     if (var_name == null || var_name === '') {
       // TODO: shorten to var_name == null?
       return data;
-    }
+    } // eslint-disable-next-line no-restricted-syntax
+
 
     for (var _iterator = String(var_name).split('.'), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
       var _ref;
@@ -408,11 +202,14 @@
       }
 
       var sub_var_name = _ref;
-      data = data[sub_var_name];
+      data = data[sub_var_name]; // eslint-disable-line no-param-reassign
+
       if (!data) break;
     }
 
-    return data != null ? data : default_value != null ? default_value : null;
+    if (data == null) data = default_value; // eslint-disable-line no-param-reassign
+
+    return data != null ? data : null;
   });
 
   var missing = (function (apply, data, raw_args) {
@@ -454,6 +251,21 @@
     return are_missing;
   });
 
+  var add = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return args.reduce(function (a, b) {
+      return parseFloat(a) + parseFloat(b);
+    }, 0);
+  });
+
+  var divide = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    return a / b;
+  });
+
   var modulo = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
@@ -469,11 +281,163 @@
     }, 1);
   });
 
+  var subtract = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    if (b === undefined) {
+      return -a;
+    }
+
+    return a - b;
+  });
+
+  var all = (function (apply, data, raw_args) {
+    var scopedData = apply(raw_args[0], data);
+    var scopedLogic = raw_args[1]; // All of an empty set is false. Note, some and none have correct fallback after the for loop
+
+    if (!scopedData.length) {
+      return false;
+    }
+
+    for (var i = 0; i < scopedData.length; i += 1) {
+      if (!truthy(apply(scopedLogic, scopedData[i]))) {
+        return false; // First falsy, short circuit
+      }
+    }
+
+    return true; // All were truthy
+  });
+
+  var filter = (function (apply, data, raw_args) {
+    var scopedData = apply(raw_args[0], data);
+    var scopedLogic = raw_args[1];
+
+    if (!isArray(scopedData)) {
+      return [];
+    } // Return only the elements from the array in the first argument,
+    // that return truthy when passed to the logic in the second argument.
+    // For parity with JavaScript, reindex the returned array
+
+
+    return scopedData.filter(function (datum) {
+      return truthy(apply(scopedLogic, datum));
+    });
+  });
+
+  var map = (function (apply, data, raw_args) {
+    var scopedData = apply(raw_args[0], data);
+    var scopedLogic = raw_args[1];
+
+    if (!isArray(scopedData)) {
+      return [];
+    }
+
+    return scopedData.map(function (datum) {
+      return apply(scopedLogic, datum);
+    });
+  });
+
+  var merge = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return args.reduce(function (a, b) {
+      return a.concat(b);
+    }, []);
+  });
+
   var none = (function (apply, data, raw_args) {
     var filtered = apply({
       filter: raw_args
     }, data);
     return filtered.length === 0;
+  });
+
+  var reduce = (function (apply, data, raw_args) {
+    var scopedData = apply(raw_args[0], data);
+    var scopedLogic = raw_args[1];
+    var initial = typeof raw_args[2] !== 'undefined' ? raw_args[2] : null;
+
+    if (!isArray(scopedData)) {
+      return initial;
+    }
+
+    return scopedData.reduce(function (accumulator, current) {
+      return apply(scopedLogic, {
+        current: current,
+        accumulator: accumulator
+      });
+    }, initial);
+  });
+
+  var some = (function (apply, data, raw_args) {
+    var filtered = apply({
+      filter: raw_args
+    }, data);
+    return filtered.length > 0;
+  });
+
+  var and = (function (apply, data, raw_args) {
+    var arg; // eslint-disable-next-line no-restricted-syntax
+
+    for (var _iterator = raw_args, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      var _ref;
+
+      if (_isArray) {
+        if (_i >= _iterator.length) break;
+        _ref = _iterator[_i++];
+      } else {
+        _i = _iterator.next();
+        if (_i.done) break;
+        _ref = _i.value;
+      }
+
+      var raw_arg = _ref;
+      arg = apply(raw_arg, data);
+
+      if (!truthy(arg)) {
+        return arg;
+      }
+    }
+
+    return arg; // Last
+  });
+
+  var _if = (function (apply, data, raw_args) {
+    var i;
+    /* 'if' should be called with a odd number of parameters, 3 or greater
+      This works on the pattern:
+      if( 0 ){ 1 }else{ 2 };
+      if( 0 ){ 1 }else if( 2 ){ 3 }else{ 4 };
+      if( 0 ){ 1 }else if( 2 ){ 3 }else if( 4 ){ 5 }else{ 6 };
+       The implementation is:
+      For pairs of values (0,1 then 2,3 then 4,5 etc)
+      If the first evaluates truthy, evaluate and return the second
+      If the first evaluates falsy, jump to the next pair (e.g, 0,1 to 2,3)
+      given one parameter, evaluate and return it. (it's an Else and all the If/ElseIf were false)
+      given 0 parameters, return NULL (not great practice, but there was no Else)
+      */
+
+    for (i = 0; i < raw_args.length - 1; i += 2) {
+      if (truthy(apply(raw_args[i], data))) {
+        return apply(raw_args[i + 1], data);
+      }
+    }
+
+    if (raw_args.length === i + 1) {
+      return apply(raw_args[i], data);
+    }
+
+    return null;
+  });
+
+  var equal = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1]; // eslint-disable-next-line eqeqeq
+
+
+    return a == b;
   });
 
   var not = (function (apply, data, raw_args) {
@@ -513,30 +477,6 @@
     return current; // Last
   });
 
-  var reduce = (function (apply, data, raw_args) {
-    var scopedData = apply(raw_args[0], data);
-    var scopedLogic = raw_args[1];
-    var initial = typeof raw_args[2] !== 'undefined' ? raw_args[2] : null;
-
-    if (!isArray(scopedData)) {
-      return initial;
-    }
-
-    return scopedData.reduce(function (accumulator, current) {
-      return apply(scopedLogic, {
-        current: current,
-        accumulator: accumulator
-      });
-    }, initial);
-  });
-
-  var some = (function (apply, data, raw_args) {
-    var filtered = apply({
-      filter: raw_args
-    }, data);
-    return filtered.length > 0;
-  });
-
   var strictEqual = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         a = _apply[0],
@@ -553,6 +493,83 @@
     return a !== b;
   });
 
+  var _in = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    if (!b || typeof b.indexOf === 'undefined') return false;
+    return b.indexOf(a) !== -1;
+  });
+
+  var log = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0]; // eslint-disable-next-line no-console
+
+
+    console.log(a);
+    return a;
+  });
+
+  var method = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        obj = _apply[0],
+        methodName = _apply[1],
+        args = _apply[2]; // eslint-disable-next-line prefer-spread
+
+
+    return obj[methodName].apply(obj, args);
+  });
+
+  var greater = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    return a > b;
+  });
+
+  var greaterEqual = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1];
+
+    return a >= b;
+  });
+
+  var less = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1],
+        c = _apply[2];
+
+    return c === undefined ? a < b : a < b && b < c;
+  });
+
+  var lessEqual = (function (apply, data, raw_args) {
+    var _apply = apply(raw_args, data),
+        a = _apply[0],
+        b = _apply[1],
+        c = _apply[2];
+
+    return c === undefined ? a <= b : a <= b && b <= c;
+  });
+
+  var max = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return Math.max.apply(Math, args);
+  });
+
+  var min = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return Math.min.apply(Math, args);
+  });
+
+  var cat = (function (apply, data, raw_args) {
+    var args = apply(raw_args, data);
+    return args.join('');
+  });
+
   var substr = (function (apply, data, raw_args) {
     var _apply = apply(raw_args, data),
         source = _apply[0],
@@ -566,18 +583,6 @@
     }
 
     return String(source).substr(start, end);
-  });
-
-  var subtract = (function (apply, data, raw_args) {
-    var _apply = apply(raw_args, data),
-        a = _apply[0],
-        b = _apply[1];
-
-    if (b === undefined) {
-      return -a;
-    }
-
-    return a - b;
   });
 
   var defaultOperators = {

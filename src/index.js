@@ -8,7 +8,7 @@ import get_values from './helpers/get_values';
 import uses_data from './helpers/uses_data';
 import rule_like from './helpers/rule_like';
 
-import * as op from './operators';
+import * as op from './operations';
 
 const defaultOperators = {
   /* eslint-disable */
