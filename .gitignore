@@ -6,3 +6,4 @@ package-lock.json
 # editor and IDE remnants
 *~
 .idea/
+/lib
