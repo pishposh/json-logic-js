@@ -136,15 +136,17 @@ QUnit.test('Bad operator', assert => {
 });
 
 QUnit.test('logging', assert => {
+  let old_console_log;
   let last_console;
   // eslint-disable-next-line func-names
+  old_console_log = console.log;
   console.log = function(logged) {
     last_console = logged;
   };
   assert.equal(jsonLogic.apply({ log: [1] }), 1);
   assert.equal(last_console, 1);
 
-  delete console.log;
+  console.log = old_console_log;
 });
 
 QUnit.test('edge cases', assert => {

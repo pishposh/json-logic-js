@@ -1,5 +1,6 @@
-import createJsonLogic from './createJsonLogic';
+import createJsonLogicApply from './createJsonLogicApply';
 
+import isArray from './helpers/isArray';
 import is_logic from './helpers/is_logic';
 import truthy from './helpers/truthy';
 import get_operator_name from './helpers/get_operator_name';
@@ -9,9 +10,7 @@ import rule_like from './helpers/rule_like';
 
 import * as op from './operators';
 
-// console.log(less);
-
-const jsonLogic = createJsonLogic({
+const defaultOperators = {
   /* eslint-disable */
   '+': op.add,
   'all': op.all,
@@ -50,14 +49,45 @@ const jsonLogic = createJsonLogic({
   '-': op.subtract,
   'var': op.var,
   /* eslint-enable */
-});
+};
 
-// restore original public API
-jsonLogic.is_logic = is_logic;
-jsonLogic.truthy = truthy;
-jsonLogic.get_operator = get_operator_name;
-jsonLogic.get_values = get_values;
-jsonLogic.uses_data = uses_data;
-jsonLogic.rule_like = rule_like;
+function add_operation(name, operator) {
+  if (isArray(name)) {
+    name.forEach(key => add_operation(key, operator));
+    return;
+  }
+  if (typeof operator === 'function') {
+    // `operator` is a function(args...)
+    // need to rework as function(apply, data, raw_args)
+    defaultOperators[name] = (apply, data, raw_args) => {
+      const args = raw_args.map(raw_arg => apply(raw_arg, data));
+      return operator(...args);
+    };
+  } else if (typeof operator === 'object') {
+    Object.getOwnPropertyNames(operator).forEach(prop_name => {
+      add_operation(`${name}.${prop_name}`, operator[prop_name]);
+    });
+  }
+}
 
-export default jsonLogic;
+function rm_operation(name) {
+  if (isArray(name)) {
+    name.forEach(key => rm_operation(key));
+    return;
+  }
+  delete defaultOperators[name];
+}
+
+// export original public API:
+export default {
+  apply: createJsonLogicApply(defaultOperators),
+  add_operation,
+  rm_operation,
+
+  is_logic,
+  truthy,
+  get_operator_name,
+  get_values,
+  uses_data,
+  rule_like,
+};

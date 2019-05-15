@@ -18,47 +18,8 @@
     return Object.keys(logic)[0];
   }
 
-  function createJsonLogic(operations) {
-    if (operations === void 0) {
-      operations = {};
-    }
-
-    function add_operation(name, operator) {
-      if (isArray(name)) {
-        name.forEach(function (key) {
-          return add_operation(key, operator);
-        });
-        return;
-      }
-
-      if (typeof operator === 'function') {
-        // `operator` is a function(args...)
-        // need to rework as function(apply, data, raw_args)
-        operations[name] = function (apply, data, raw_args) {
-          var args = raw_args.map(function (raw_arg) {
-            return apply(raw_arg, data);
-          });
-          return operator.apply(void 0, args);
-        };
-      } else if (typeof operator === 'object') {
-        Object.getOwnPropertyNames(operator).forEach(function (prop_name) {
-          add_operation(name + "." + prop_name, operator[prop_name]);
-        });
-      }
-    }
-
-    function rm_operation(name) {
-      if (isArray(name)) {
-        name.forEach(function (key) {
-          return rm_operation(key);
-        });
-        return;
-      }
-
-      delete operations[name];
-    }
-
-    function apply(logic, data) {
+  var createJsonLogicApply = (function (operators) {
+    return function apply(logic, data) {
       if (!data) data = {}; // Does this array contain logic? Only one way to find out.
 
       if (isArray(logic)) {
@@ -80,21 +41,15 @@
         args = [args];
       }
 
-      var operator = operations[op_name];
+      var operator = operators[op_name];
 
       if (!operator) {
         throw new Error("Unrecognized operation " + op_name);
       }
 
       return operator(apply, data, args);
-    }
-
-    return {
-      apply: apply,
-      add_operation: add_operation,
-      rm_operation: rm_operation
     };
-  }
+  });
 
   /*
     This helper will defer to the JsonLogic spec as a tie-breaker when different language interpreters define different behavior for the truthiness of primitives.  E.g., PHP considers empty arrays to be falsy, but Javascript considers them to be truthy. JsonLogic, as an ecosystem, needs one consistent answer.
@@ -625,7 +580,7 @@
     return a - b;
   });
 
-  var jsonLogic = createJsonLogic({
+  var defaultOperators = {
     /* eslint-disable */
     '+': add,
     'all': all,
@@ -665,16 +620,57 @@
     'var': variable
     /* eslint-enable */
 
-  }); // restore original public API
+  };
 
-  jsonLogic.is_logic = is_logic;
-  jsonLogic.truthy = truthy;
-  jsonLogic.get_operator = get_operator_name;
-  jsonLogic.get_values = get_values;
-  jsonLogic.uses_data = uses_data;
-  jsonLogic.rule_like = rule_like;
+  function add_operation(name, operator) {
+    if (isArray(name)) {
+      name.forEach(function (key) {
+        return add_operation(key, operator);
+      });
+      return;
+    }
 
-  return jsonLogic;
+    if (typeof operator === 'function') {
+      // `operator` is a function(args...)
+      // need to rework as function(apply, data, raw_args)
+      defaultOperators[name] = function (apply, data, raw_args) {
+        var args = raw_args.map(function (raw_arg) {
+          return apply(raw_arg, data);
+        });
+        return operator.apply(void 0, args);
+      };
+    } else if (typeof operator === 'object') {
+      Object.getOwnPropertyNames(operator).forEach(function (prop_name) {
+        add_operation(name + "." + prop_name, operator[prop_name]);
+      });
+    }
+  }
+
+  function rm_operation(name) {
+    if (isArray(name)) {
+      name.forEach(function (key) {
+        return rm_operation(key);
+      });
+      return;
+    }
+
+    delete defaultOperators[name];
+  } // export original public API:
+
+
+  var index = {
+    apply: createJsonLogicApply(defaultOperators),
+    add_operation: add_operation,
+    rm_operation: rm_operation,
+    is_logic: is_logic,
+    truthy: truthy,
+    get_operator_name: get_operator_name,
+    get_values: get_values,
+    uses_data: uses_data,
+    rule_like: rule_like
+  };
+
+  return index;
 
 }));
 //# sourceMappingURL=jsonLogic.js.map
