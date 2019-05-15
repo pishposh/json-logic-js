@@ -1,5 +1,5 @@
 export { default as and } from './and';
-export { default as if } from './if';
+export { default as if, default as condition } from './if';
 export { default as equal } from './equal';
 export { default as not } from './not';
 export { default as notEqual } from './notEqual';

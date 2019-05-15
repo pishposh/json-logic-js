@@ -4,6 +4,24 @@
   (global = global || self, global.jsonLogic = factory());
 }(this, function () { 'use strict';
 
+  function _extends() {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+
+      return target;
+    };
+
+    return _extends.apply(this, arguments);
+  }
+
   var isArray = Array.isArray;
 
   function is_logic(logic) {
@@ -51,6 +69,65 @@
       return operator(apply, data, args);
     };
   });
+
+  function createJsonLogic(_operations, raw) {
+    var operations = {};
+
+    if (_operations) {
+      Object.keys(_operations).forEach(function (name) {
+        var operation = _operations[name];
+        add_operation(operation.op || name, operation, raw);
+      });
+    }
+
+    function add_operation(name, op, raw) {
+      if (isArray(name)) {
+        name.forEach(function (key) {
+          return add_operation(key, op);
+        });
+        return;
+      }
+
+      if (typeof op === 'function') {
+        // handle `deepFirst`, `withApply`, `op` properties for compatibility
+        // with @axa-ch/json-logic-js:
+        if (raw || op.deepFirst === false) {
+          operations[name] = op;
+        } else if (op.withApply) {
+          operations[name] = function (apply, data, raw_args) {
+            var args = apply(raw_args, data);
+            return op.apply(void 0, [apply].concat(args));
+          };
+        } else {
+          operations[name] = function (apply, data, raw_args) {
+            var args = apply(raw_args, data);
+            return op.apply(void 0, args);
+          };
+        }
+      } else if (typeof op === 'object') {
+        Object.getOwnPropertyNames(op).forEach(function (prop_name) {
+          add_operation(name + "." + prop_name, op[prop_name]);
+        });
+      }
+    }
+
+    function rm_operation(name) {
+      if (isArray(name)) {
+        name.forEach(function (key) {
+          return rm_operation(key);
+        });
+        return;
+      }
+
+      delete operations[name];
+    }
+
+    return {
+      apply: createJsonLogicApply(operations),
+      add_operation: add_operation,
+      rm_operation: rm_operation
+    };
+  }
 
   /*
     This helper will defer to the JsonLogic spec as a tie-breaker when different language interpreters define different behavior for the truthiness of primitives.  E.g., PHP considers empty arrays to be falsy, but Javascript considers them to be truthy. JsonLogic, as an ecosystem, needs one consistent answer.
@@ -585,7 +662,7 @@
     return String(source).substr(start, end);
   });
 
-  var defaultOperators = {
+  var index = _extends({}, createJsonLogic({
     /* eslint-disable */
     '+': add,
     'all': all,
@@ -625,55 +702,14 @@
     'var': variable
     /* eslint-enable */
 
-  };
-
-  function add_operation(name, operator) {
-    if (isArray(name)) {
-      name.forEach(function (key) {
-        return add_operation(key, operator);
-      });
-      return;
-    }
-
-    if (typeof operator === 'function') {
-      // `operator` is a function(args...)
-      // need to rework as function(apply, data, raw_args)
-      defaultOperators[name] = function (apply, data, raw_args) {
-        var args = raw_args.map(function (raw_arg) {
-          return apply(raw_arg, data);
-        });
-        return operator.apply(void 0, args);
-      };
-    } else if (typeof operator === 'object') {
-      Object.getOwnPropertyNames(operator).forEach(function (prop_name) {
-        add_operation(name + "." + prop_name, operator[prop_name]);
-      });
-    }
-  }
-
-  function rm_operation(name) {
-    if (isArray(name)) {
-      name.forEach(function (key) {
-        return rm_operation(key);
-      });
-      return;
-    }
-
-    delete defaultOperators[name];
-  } // export original public API:
-
-
-  var index = {
-    apply: createJsonLogicApply(defaultOperators),
-    add_operation: add_operation,
-    rm_operation: rm_operation,
+  }, true), {
     is_logic: is_logic,
     truthy: truthy,
     get_operator_name: get_operator_name,
     get_values: get_values,
     uses_data: uses_data,
     rule_like: rule_like
-  };
+  });
 
   return index;
 
