@@ -2,7 +2,7 @@ import createJsonLogic from './createJsonLogic';
 
 import is_logic from './helpers/is_logic';
 import truthy from './helpers/truthy';
-import get_operator_name from './helpers/get_operator_name';
+import get_operator from './helpers/get_operator';
 import get_values from './helpers/get_values';
 import uses_data from './helpers/uses_data';
 import rule_like from './helpers/rule_like';
@@ -56,7 +56,7 @@ export default {
   ),
   is_logic,
   truthy,
-  get_operator_name,
+  get_operator,
   get_values,
   uses_data,
   rule_like,

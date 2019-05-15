@@ -1,7 +1,7 @@
-import get_operator_name from './get_operator_name';
+import get_operator from './get_operator';
 
 function get_values(logic) {
-  return logic[get_operator_name(logic)];
+  return logic[get_operator(logic)];
 }
 
 export default get_values;

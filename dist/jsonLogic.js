@@ -32,7 +32,7 @@
     ;
   }
 
-  function get_operator_name(logic) {
+  function get_operator(logic) {
     return Object.keys(logic)[0];
   }
 
@@ -52,7 +52,7 @@
         return logic;
       }
 
-      var op_name = get_operator_name(logic);
+      var op_name = get_operator(logic);
       var args = logic[op_name]; // operands
       // easy syntax for unary operators, like {"var" : "x"} instead of strict {"var" : ["x"]}
 
@@ -70,13 +70,13 @@
     };
   });
 
-  function createJsonLogic(_operations, raw) {
+  function createJsonLogic(_operations, isRawOps) {
     var operations = {};
 
     if (_operations) {
       Object.keys(_operations).forEach(function (name) {
         var operation = _operations[name];
-        add_operation(operation.op || name, operation, raw);
+        add_operation(operation.op || name, operation, isRawOps);
       });
     }
 
@@ -144,7 +144,7 @@
   }
 
   function get_values(logic) {
-    return logic[get_operator_name(logic)];
+    return logic[get_operator(logic)];
   }
 
   /**
@@ -168,7 +168,7 @@
     var collection = [];
 
     if (is_logic(logic)) {
-      var op = get_operator_name(logic);
+      var op = get_operator(logic);
       var values = logic[op];
 
       if (!isArray(values)) {
@@ -216,8 +216,8 @@
 
     if (is_logic(pattern)) {
       if (is_logic(rule)) {
-        var pattern_op = get_operator_name(pattern);
-        var rule_op = get_operator_name(rule);
+        var pattern_op = get_operator(pattern);
+        var rule_op = get_operator(rule);
 
         if (pattern_op === '@' || pattern_op === rule_op) {
           // echo "\nOperators match, go deeper\n";
@@ -705,7 +705,7 @@
   }, true), {
     is_logic: is_logic,
     truthy: truthy,
-    get_operator_name: get_operator_name,
+    get_operator: get_operator,
     get_values: get_values,
     uses_data: uses_data,
     rule_like: rule_like

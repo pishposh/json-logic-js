@@ -1,6 +1,6 @@
 import isArray from './helpers/isArray';
 import is_logic from './helpers/is_logic';
-import get_operator_name from './helpers/get_operator_name';
+import get_operator from './helpers/get_operator';
 
 export default operators =>
   function apply(logic, data) {
@@ -15,7 +15,7 @@ export default operators =>
       return logic;
     }
 
-    const op_name = get_operator_name(logic);
+    const op_name = get_operator(logic);
     let args = logic[op_name]; // operands
 
     // easy syntax for unary operators, like {"var" : "x"} instead of strict {"var" : ["x"]}
