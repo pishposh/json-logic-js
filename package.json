@@ -4,7 +4,7 @@
   "description": "Build complex rules, serialize them as JSON, and execute them in JavaScript",
   "main": "dist/jsonLogic.js",
   "browser": "dist/jsonLogic.min.js",
-  "module": "lib/index.js",
+  "module": "lib/index",
   "directories": {
     "test": "tests"
   },
@@ -48,8 +48,8 @@
     "test": "cross-env NODE_ENV=test qunit 'tests/**/*.js' -r tap",
     "pretest": "npm run build-package",
     "build": "cross-env NODE_ENV=production npm run build-lib",
-    "build-lib": "babel src --out-dir lib",
-    "prebuild-lib": "rimraf lib",
+    "build-lib": "./tasks/build.sh",
+    "prebuild-lib": "rimraf lib lib-esm",
     "postbuild-lib": "npm run build-package",
     "build-package": "rollup --config",
     "prebuild-package": "rimraf dist",
