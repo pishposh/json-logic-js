@@ -6,8 +6,9 @@ export default (apply, data, raw_args) => {
     return data;
   }
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const sub_var_name of String(var_name).split('.')) {
+  const tokens = String(var_name).split('.');
+  for (let i = 0; i < tokens.length; i++) {
+    const sub_var_name = tokens[i];
     data = data[sub_var_name]; // eslint-disable-line no-param-reassign
     if (!data) break;
   }

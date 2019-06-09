@@ -263,22 +263,12 @@
     if (var_name == null || var_name === '') {
       // TODO: shorten to var_name == null?
       return data;
-    } // eslint-disable-next-line no-restricted-syntax
+    }
 
+    var tokens = String(var_name).split('.');
 
-    for (var _iterator = String(var_name).split('.'), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-      var _ref;
-
-      if (_isArray) {
-        if (_i >= _iterator.length) break;
-        _ref = _iterator[_i++];
-      } else {
-        _i = _iterator.next();
-        if (_i.done) break;
-        _ref = _i.value;
-      }
-
-      var sub_var_name = _ref;
+    for (var i = 0; i < tokens.length; i++) {
+      var sub_var_name = tokens[i];
       data = data[sub_var_name]; // eslint-disable-line no-param-reassign
 
       if (!data) break;
@@ -455,21 +445,10 @@
   });
 
   var and = (function (apply, data, raw_args) {
-    var arg; // eslint-disable-next-line no-restricted-syntax
+    var arg;
 
-    for (var _iterator = raw_args, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-      var _ref;
-
-      if (_isArray) {
-        if (_i >= _iterator.length) break;
-        _ref = _iterator[_i++];
-      } else {
-        _i = _iterator.next();
-        if (_i.done) break;
-        _ref = _i.value;
-      }
-
-      var raw_arg = _ref;
+    for (var i = 0; i < raw_args.length; i++) {
+      var raw_arg = raw_args[i];
       arg = apply(raw_arg, data);
 
       if (!truthy(arg)) {
